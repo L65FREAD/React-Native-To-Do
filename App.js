@@ -13,10 +13,18 @@ import Task from "./components/Task";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function App() {
+  const [task, setTask] = useState();
+  const [taskItems, setTaskItems] = useState([]);
+
+  useEffect(() => {
+    getData();
+  }, []);
+
   const storeData = async (value) => {
     try {
       const jsonValue = JSON.stringify(value);
-      await AsyncStorage.setItem("@storage_Key", jsonValue);
+      await AsyncStorage.setItem("task_list", jsonValue);
+      console.log("Data Stored");
     } catch (e) {
       // saving error
     }
@@ -24,31 +32,27 @@ export default function App() {
 
   const getData = async () => {
     try {
-      const jsonValue = await AsyncStorage.getItem("@storage_Key");
-      return jsonValue != null ? JSON.parse(jsonValue) : [];
+      const jsonValue = await AsyncStorage.getItem("task_list");
+      console.log("Data Fetched");
+      valueReturned = jsonValue != null ? JSON.parse(jsonValue) : [];
+      setTaskItems([...valueReturned]);
     } catch (e) {
       // error reading value
     }
   };
 
-  const [task, setTask] = useState();
-  const [taskItems, setTaskItems] = useState([]);
-
-  // useEffect(() => {
-  //   setTaskItems([...getData()]);
-  // });
-
   const handleAddTask = () => {
     Keyboard.dismiss();
     setTaskItems([...taskItems, task]);
     setTask(null);
+    storeData([...taskItems, task]);
   };
 
   const completeTask = (index) => {
     let itemsCopy = [...taskItems];
     itemsCopy.splice(index, 1);
     setTaskItems(itemsCopy);
-    storeData(taskItems);
+    storeData([...itemsCopy]);
   };
 
   return (
