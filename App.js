@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { StatusBar } from "expo-status-bar";
 import {
   Keyboard,
@@ -10,10 +10,33 @@ import {
   View,
 } from "react-native";
 import Task from "./components/Task";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function App() {
+  const storeData = async (value) => {
+    try {
+      const jsonValue = JSON.stringify(value);
+      await AsyncStorage.setItem("@storage_Key", jsonValue);
+    } catch (e) {
+      // saving error
+    }
+  };
+
+  const getData = async () => {
+    try {
+      const jsonValue = await AsyncStorage.getItem("@storage_Key");
+      return jsonValue != null ? JSON.parse(jsonValue) : [];
+    } catch (e) {
+      // error reading value
+    }
+  };
+
   const [task, setTask] = useState();
   const [taskItems, setTaskItems] = useState([]);
+
+  // useEffect(() => {
+  //   setTaskItems([...getData()]);
+  // });
 
   const handleAddTask = () => {
     Keyboard.dismiss();
@@ -25,6 +48,7 @@ export default function App() {
     let itemsCopy = [...taskItems];
     itemsCopy.splice(index, 1);
     setTaskItems(itemsCopy);
+    storeData(taskItems);
   };
 
   return (
