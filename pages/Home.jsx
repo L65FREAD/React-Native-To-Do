@@ -9,6 +9,7 @@ import {
   View,
 } from "react-native";
 import Task from "./../components/Task";
+import AddTask from "../components/AddTask";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 function Home() {
@@ -55,6 +56,7 @@ function Home() {
   return (
     <View style={styles.container}>
       {/* Write a task */}
+      <AddTask />
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.writeTaskWrapper}
@@ -94,13 +96,14 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#E8EAED",
-    paddingHorizontal: 10,
+    paddingHorizontal: 20,
+    paddingTop: 60,
   },
   writeTaskWrapper: {
     width: "100%",
     paddingTop: 60,
     flexDirection: "row",
-    justifyContent: "space-around",
+    justifyContent: "space-between",
     alignItems: "center",
   },
   input: {
@@ -125,7 +128,6 @@ const styles = StyleSheet.create({
   addText: {},
   tasksWrapper: {
     paddingTop: 20,
-    paddingHorizontal: 20,
   },
   sectionTitle: {
     fontSize: 24,
