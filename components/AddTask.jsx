@@ -5,16 +5,17 @@ import {
   Switch,
   View,
   TextInput,
-  TouchableOpacity,
+  Alert,
   Pressable,
   Button,
+  Platform,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import RNDateTimePicker from "@react-native-community/datetimepicker";
 
-function AddTask() {
+function AddTask(props) {
   const [addTaskSelected, setAddTaskSelected] = useState(false);
 
   const [text, setText] = useState();
@@ -22,13 +23,19 @@ function AddTask() {
   const [time, setTime] = useState(new Date());
   const [reminder, setReminder] = useState(false);
 
-  const storeData = async (value) => {
-    try {
-      const jsonValue = JSON.stringify(value);
-      await AsyncStorage.setItem("task_list", jsonValue);
-    } catch (e) {
-      // saving error
-    }
+  //____ANDROID____________ Date Time Picker States
+  const [show, setShow] = useState(false);
+  const [mode, setMode] = useState();
+
+  const showMode = (currentMode) => {
+    setShow(true);
+    setMode(currentMode);
+  };
+
+  const onAndroidDateTimeChange = (event, selectedDate) => {
+    const currentDate = selectedDate || date;
+    setShow(Platform.OS === "ios");
+    setDate(currentDate);
   };
 
   const handleDateChange = (event, date) => {
@@ -48,7 +55,7 @@ function AddTask() {
   };
 
   const handleTaskAddToggle = () => {
-    setAddTaskSelected((previousState) => !previousState);
+    setAddTaskSelected(true);
   };
 
   const handleDiscardTask = () => {
@@ -59,7 +66,25 @@ function AddTask() {
     setTime(new Date());
   };
 
-  const handleSaveClick = () => {};
+  const createButtonAlert = (title, message) =>
+    Alert.alert(title, message, [{ text: "OK" }]);
+
+  const handleSaveClick = () => {
+    if (text === null) {
+      createButtonAlert(
+        "Empty Title",
+        "The title for the task cannot be empty"
+      );
+      return;
+    }
+    let completed = false;
+    let task = { text, date, time, reminder, completed };
+    props.handleAddTask(task);
+    setText(null);
+    setReminder(false);
+    setDate(new Date());
+    setTime(new Date());
+  };
 
   return (
     <View style={styles.addTaskWrapper}>
@@ -72,7 +97,7 @@ function AddTask() {
             placeholder="something's coming up..."
             value={text}
             placeholderTextColor={"#00000030"}
-            onTextChange={(text) => setText(text)}
+            onChangeText={(text) => setText(text)}
           />
         )}
         {!addTaskSelected && (
@@ -87,26 +112,71 @@ function AddTask() {
               name="calendar-month"
               size={24}
               color={"#1B2A41"}
+              style={styles.icon}
             />
-            <RNDateTimePicker
-              mode="date"
-              value={date}
-              onChange={handleDateChange}
-              style={styles.dateTimePicker}
-            />
+            {Platform.OS === "ios" ? (
+              <RNDateTimePicker
+                mode="date"
+                value={date}
+                onChange={handleDateChange}
+                style={styles.dateTimePicker}
+              />
+            ) : (
+              <Button
+                title={
+                  date.getFullYear() +
+                  "/" +
+                  ("0" + (date.getMonth() + 1)).slice(-2) +
+                  "/" +
+                  ("0" + date.getDate()).slice(-2)
+                }
+                color="#41D3D3"
+                style={styles.dateTimePickerStyle}
+                onPress={() => showMode("date")}
+              />
+            )}
+            {show && (
+              <RNDateTimePicker
+                mode={mode}
+                value={date}
+                onChange={onAndroidDateTimeChange}
+                style={styles.dateTimePicker}
+              />
+            )}
             <FontAwesome
               name="clock-o"
               size={24}
               color={"#1B2A41"}
-              style={styles.clock}
+              style={styles.icon}
             />
-            <RNDateTimePicker
-              mode="time"
-              value={time}
-              onChange={handleTimeChange}
-              style={styles.dateTimePicker}
-              accentColor="#fff"
-            />
+            {Platform.OS === "ios" ? (
+              <RNDateTimePicker
+                mode="time"
+                value={time}
+                onChange={handleTimeChange}
+                style={styles.dateTimePicker}
+                accentColor="#fff"
+              />
+            ) : (
+              <Button
+                title={
+                  ("0" + date.getHours()).slice(-2) +
+                  ":" +
+                  ("0" + date.getMinutes()).slice(-2)
+                }
+                color="#41D3D3"
+                style={styles.dateTimePickerStyle}
+                onPress={() => showMode("time")}
+              />
+            )}
+            {show && (
+              <RNDateTimePicker
+                mode={mode}
+                value={date}
+                onChange={onAndroidDateTimeChange}
+                style={styles.dateTimePicker}
+              />
+            )}
           </View>
           <View style={styles.row}>
             <Switch
@@ -126,7 +196,11 @@ function AddTask() {
               color={"red"}
               onPress={handleDiscardTask}
             />
-            <Button title="Save" style={styles.discard} />
+            <Button
+              title="Save"
+              style={styles.discard}
+              onPress={handleSaveClick}
+            />
           </View>
         </View>
       )}
@@ -175,10 +249,11 @@ const styles = StyleSheet.create({
   },
   discard: {},
   save: {},
-  clock: {
-    marginStart: 10,
+  icon: {
+    marginStart: 5,
+    marginEnd: 5,
   },
-  dateTimePicker: {
+  dateTimePickerStyle: {
     marginStart: 5,
   },
   toggle: {
