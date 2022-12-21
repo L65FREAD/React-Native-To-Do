@@ -46,24 +46,29 @@ function Home() {
     storeData([...taskItems, task]);
   };
 
-  const removeTask = (index) => {
-    let itemsCopy = [...taskItems];
-    itemsCopy.splice(index, 1);
-    setTaskItems(itemsCopy);
-    storeData([...itemsCopy]);
-  };
+  const handleChangeInTask = (index, completed) => {
+    const itemsCopy = [...taskItems];
+    const classifiedItems = completed
+      ? itemsCopy.filter((item) => item["completed"])
+      : itemsCopy.filter((item) => !item["completed"]);
+    const item = classifiedItems[index];
 
-  const completeTask = (index) => {
-    let itemsCopy = [...taskItems];
-    let completedItem = {
-      text: itemsCopy[index]["text"],
-      date: itemsCopy[index]["date"],
-      time: itemsCopy[index]["time"],
-      reminder: itemsCopy[index]["reminder"],
-      completed: true,
-    };
-    itemsCopy.splice(index, 1, completedItem);
-    setTaskItems(itemsCopy);
+    // Find the item in the itemsCopy array
+    const foundItem = itemsCopy.find((i) => i === item);
+
+    if (foundItem) {
+      // If the item was found, remove it from the itemsCopy array if the completed parameter is true
+      if (completed) {
+        const itemIndex = itemsCopy.indexOf(foundItem);
+        itemsCopy.splice(itemIndex, 1);
+      } else {
+        // If the completed parameter is false, toggle the completed property of the foundItem
+        foundItem.completed = !foundItem.completed;
+      }
+    }
+
+    // Update the list of items and store the updated list in AsyncStorage
+    setTaskItems([...itemsCopy]);
     storeData([...itemsCopy]);
   };
 
@@ -77,7 +82,12 @@ function Home() {
           .filter((item) => item["completed"])
           .map((item, index) => {
             return (
-              <TouchableOpacity key={index} onPress={() => removeTask(index)}>
+              <TouchableOpacity
+                key={index}
+                onPressIn={() => handleChangeInTask(index, true)}
+                onPressOut={() => {}}
+                pointerEvents="box-only"
+              >
                 <Task
                   text={item["text"]}
                   date={new Date(item["date"])}
@@ -95,7 +105,12 @@ function Home() {
           .filter((item) => !item["completed"])
           .map((item, index) => {
             return (
-              <TouchableOpacity key={index} onPress={() => completeTask(index)}>
+              <TouchableOpacity
+                key={index}
+                onPressIn={() => handleChangeInTask(index, false)}
+                onPressOut={() => {}}
+                pointerEvents="box-only"
+              >
                 <Task
                   text={item["text"]}
                   date={new Date(item["date"])}
